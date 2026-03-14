@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Form elements */
+input[type="text"],
+input[type="number"],
+select {
+  transition: border-color 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  outline: none;
+}
+
+/* Button transitions */
+button {
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+/* Table styles */
+table {
+  border-collapse: collapse;
+}
+
+/* Draggable title bar for frameless window */
+.draggable-title {
+  -webkit-app-region: drag;
+}
+
+.draggable-title button,
+.draggable-title input,
+.draggable-title select {
+  -webkit-app-region: no-drag;
+}
+
+/* No select for UI elements */
+.select-none {
+  user-select: none;
+  -webkit-user-select: none;
+}

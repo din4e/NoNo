@@ -2,81 +2,185 @@
 
 > [!WARNING]
 > 本工具仅供安全研究人员、网络管理员及相关技术人员进行授权的安全测试、漏洞评估和安全审计工作使用。使用本工具进行任何未经授权的网络攻击或渗透测试等行为均属违法，使用者需自行承担相应的法律责任。
+>
+> This tool is for authorized security research, vulnerability assessment, and security auditing only.
 
-Nono 是一款 patch 文件查找器。
+NoNo 是一个 PE 文件扫描器和代码注入工具，用于安全研究。
 
-![](./img/NoNo.png)
+## 功能特性
 
-## 编译
+- **PE 文件扫描**: 查找可被 patch 的小型签名可执行文件
+- **代码注入**: 4 种注入方法 (Function, EntryPoint, TLS, EAT)
+- **内置模板**: 提供测试用的 shellcode 模板
+- **数字签名**: 签名验证和处理
+- **GUI & CLI**: 同时提供图形界面和命令行界面
+
+## 项目结构
+
+```
+NoNo/
+├── cmd/
+│   └── nono-cli/          # CLI 入口
+├── internal/
+│   ├── scanner/           # PE 扫描模块
+│   ├── injector/          # 代码注入模块
+│   └── config/            # 配置管理
+├── frontend/              # Wails 前端 (React + TypeScript + TailwindCSS)
+├── main.go                # Wails 入口
+├── app.go                 # Wails 应用绑定
+└── wails.json             # Wails 配置
+```
+
+## 构建
+
+### 前置要求
+
+- Go 1.18+
+- Node.js 16+
+- Wails CLI v2.11+
 
 ```bash
-go build -o nono.exe
+# 安装 Wails CLI
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+# 安装前端依赖
+cd frontend && npm install
+```
+
+### CLI 版本
+
+```bash
+go build -o build/nono-cli.exe ./cmd/nono-cli
+```
+
+### GUI 版本
+
+```bash
+wails build
 ```
 
 ## 使用方法
 
-### 1. 找 patch 文件
-
-找那种小的exe，带签名的，选不依赖特殊dll的exe，尽量找信誉高的文件，最好还能带logo的，不带黑框的。其他参数见`-h`，工具默认搜索`C:/Program Files/`。
+### GUI 模式
 
 ```bash
-.\nono.exe -h
-Usage of C:\Users\din4e\nono.exe:
+# 开发模式
+wails dev
+
+# 运行构建后的程序
+.\build\bin\NoNo.exe
+```
+
+GUI 提供两个主要功能：
+- **扫描**: 目录扫描、过滤条件配置、实时结果展示
+- **注入**: 选择目标 PE、选择 shellcode（模板或自定义）、配置注入方法
+
+### CLI 模式
+
+```bash
+.\build\nono-cli.exe -h
+Usage:
   -arch string
-        架构类型: x86, x64, both (default "x64")
-  -detail
-        显示详细的导入函数列表
+        架构: x86, x64, both (default "x64")
   -dir string
-        要扫描的目录路径 (default "C:\\Program Files\\")
+        扫描目录 (default "C:\\Program Files\\")
   -ext string
-        文件扩展名，用逗号分隔 (default "exe")
+        扩展名 (comma-separated) (default "exe")
   -imports
-        显示导入表DLL信息 (default true)
+        显示导入表信息 (default true)
   -max int
-        最大文件大小 (字节，0表示无限制) (default 61440)
+        最大文件大小 (default 61440)
   -min int
-        最小文件大小 (字节)
-  -signed string
-        签名过滤: signed(仅已签名), unsigned(仅未签名), all(全部) (default "signed")
+        最小文件大小
+  -sign string
+        签名过滤: signed, unsigned, all (default "signed")
   -workers int
-        工作线程数 (default 32)
+        线程数 (default 4)
 ```
 
-### 2. 混淆 shellcode
-
+示例:
 ```bash
-sgn.exe -a 64 -i tcp_windows_amd64.bin -o sgn_shellcode
-# or
-Shoggoth.exe -i tcp_windows_amd64.bin -o sgn_vshell
+.\build\nono-cli.exe -dir "C:\Program Files" -arch x64 -sign signed -max 50000
 ```
 
-### 3. 使用 [BinHol](https://github.com/timwhitez/BinHol) patch 白文件
+## Shellcode 模板
 
-+ 方案一：`BinHol.exe -sign entrypoint .\git.exe .\sgn_shellcode` 白文件直接添加C2的shellcode，例如vshell bin文件。
-+ 【推荐】方案二：`BinHol.exe -sign entrypoint .\git.exe .\template_1` 白文件添加自己写的shellcode;
-  + template_1 为s hellcode，可以本地读取命名为 AAAA 的bin文件执行的，实现分离读取
-  + template_0 是弹对话框的shellcode，可以用来测试功能
-+ 方案三：自己实现远程拉取Shellcode。
+NoNo 内置了测试用的 shellcode 模板：
 
+| 模板 | 描述 |
+|------|------|
+| `template_0` | MessageBox 测试 shellcode |
+| `template_1` | 文件读取 shellcode |
+
+### 使用模板
+
+1. 打开 GUI 程序
+2. 进入 **注入** 标签页
+3. 从下拉菜单选择模板或选择自定义 shellcode 文件
+4. 选择目标 PE 文件
+5. 选择注入方法和选项
+6. 点击 **注入 Shellcode**
+
+## 注入方法
+
+1. **Function Patching**: 在 .text 节中找到代码洞并放入 shellcode
+2. **Entry Point Hijacking**: 修改入口点直接执行 shellcode
+3. **TLS Injection**: 使用 TLS 回调在主入口点之前执行代码
+4. **EAT Patching**: 修补导出函数地址 (仅 DLL)
+
+## 工作流程
+
+### 1. 查找可 Patch 的文件
+
+使用 GUI 或 CLI 扫描适合的目标文件：
+- 小型可执行文件 (< 100KB)
+- 有数字签名
+- 依赖 DLL 少
+- 高信誉文件
+
+### 2. 准备 Shellcode
+
+选项 A: 使用内置模板测试
+选项 B: 生成自定义 shellcode:
 ```bash
-# 方案一：
-BinHol.exe -sign entrypoint .\git.exe .\sgn_vshell
-# 方案二： sgn_vshell -> AAAA
-BinHol.exe -sign entrypoint .\git.exe .\template_1
+# 使用 sgn 编码
+sgn.exe -a 64 -i shellcode.bin -o encoded.bin
+
+# 使用 Shoggoth
+Shoggoth.exe -i shellcode.bin -o obfuscated.bin
 ```
 
-> [!IMPORTANT]
-> 可以过火绒和360，内存不了卡巴斯基，行为和流量还是有问题。
-> BinHol、Sgn、Shoggoth不放心请自行编译。
+### 3. 注入 Shellcode
+
+使用 GUI:
+1. 选择目标 PE 文件
+2. 选择 shellcode (模板或自定义)
+3. 选择注入方法
+4. 配置选项 (备份、签名)
+5. 点击注入
+
+## 技术细节
+
+- **PE 解析**: 使用 `github.com/Binject/debug/pe` 进行扩展 PE 功能
+- **签名验证**: 通过 syscall 调用 Windows CryptoAPI
+- **并发**: 使用 worker pool 模式进行并行扫描
+- **前端**: React 18 + TypeScript + TailwindCSS
+- **后端**: Go 1.24 + Wails v2
+
+## 检测注意事项
+
+- 修改后的 PE 文件可能触发杀软
+- 内存扫描器可检测注入代码
+- 行为分析可能标记可疑模式
+- 修改后文件哈希会改变
 
 ## 参考资料
 
-+ https://mp.weixin.qq.com/s/MjdsRAsoArKUykBBKGwe5Q 三年了，还是VT全绿，它到底凭什么？
-+ https://xz.aliyun.com/news/14533 一种基于patch免杀技术的自动化实现VT0
-+ [yj94/BinarySpy](https://github.com/yj94/BinarySpy ) 自动化工具
-+ [clownfive/CppDevShellcode](https://github.com/clownfive/CppDevShellcode) 模板
-+ [yinsel/BypassAV](https://github.com/yinsel/BypassAV)
-+ [timwhitez/BinHol](https://github.com/timwhitez/BinHol) 自动化Patch工具
-+ [[2024]通杀检测基于白文件patch黑代码的免杀技术的后门](https://key08.com/index.php/2024/08/03/1949.html) 鸭鸭给出的检测手段
-+ [EgeBalci/sgn](https://github.com/EgeBalci/sgn) Sgn 编码器
-+ [frkngksl/Shoggoth](https://github.com/frkngksl/Shoggoth)
++ [BinHol](https://github.com/timwhitez/BinHol) - 原始注入工具
++ [sgn](https://github.com/EgeBalci/sgn) - Shellcode 编码器
++ [Shoggoth](https://github.com/frkngksl/Shoggoth) - 高级 shellcode 混淆器
++ [检测方法](https://key08.com/index.php/2024/08/03/1949.html)
+
+## 许可证
+
+仅供授权安全研究和教育目的使用。

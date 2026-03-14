@@ -1,4 +1,43 @@
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Build artifacts
 *.exe
+*.dll
+*.bin
+build/
+dist/
+wails_output.txt
+
+# Backups
 bks/
+*.bak
+
+# Dependencies
+node_modules/
+vendor/
+
+# Wails
+frontend/wailsjs/
+frontend/dist/
+frontend/node_modules/
+
+# Go
+*.test
+*.out
+go.work
+go.work.sum
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
