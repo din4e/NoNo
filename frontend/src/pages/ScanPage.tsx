@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   FolderOpen,
   Play,
@@ -11,6 +11,8 @@ import {
   File,
   ChevronDown,
   ChevronRight,
+  Filter,
+  X,
 } from 'lucide-react'
 import {
   SelectDirectory,
@@ -44,6 +46,36 @@ function ScanPage() {
     config: true,
     results: true,
   })
+
+  // Filter state
+  const [filterText, setFilterText] = useState('')
+  const [filterSigned, setFilterSigned] = useState<'all' | 'signed' | 'unsigned'>('all')
+  const [filterArch, setFilterArch] = useState<'all' | 'x64' | 'x86'>('all')
+  const [showFilter, setShowFilter] = useState(false)
+
+  // Filtered results
+  const filteredResults = useMemo(() => {
+    return results.filter((file) => {
+      // Text filter
+      if (filterText && !file.path.toLowerCase().includes(filterText.toLowerCase())) {
+        return false
+      }
+      // Signed filter
+      if (filterSigned === 'signed' && !file.isSigned) return false
+      if (filterSigned === 'unsigned' && file.isSigned) return false
+      // Arch filter
+      if (filterArch !== 'all' && file.architecture !== filterArch) return false
+      return true
+    })
+  }, [results, filterText, filterSigned, filterArch])
+
+  const hasActiveFilters = filterText || filterSigned !== 'all' || filterArch !== 'all'
+
+  const clearFilters = () => {
+    setFilterText('')
+    setFilterSigned('all')
+    setFilterArch('all')
+  }
 
   useEffect(() => {
     GetDefaultConfig().then((cfg) => {
@@ -273,22 +305,85 @@ function ScanPage() {
           className="flex w-full items-center justify-between px-2 py-1.5 hover:bg-gray-50"
         >
           <span className="text-xs font-medium">
-            扫描结果 ({results.length})
+            扫描结果 ({hasActiveFilters ? `${filteredResults.length}/${results.length}` : results.length})
           </span>
-          {expandedSections.results ? (
-            <ChevronDown className="h-3 w-3 text-gray-400" />
-          ) : (
-            <ChevronRight className="h-3 w-3 text-gray-400" />
-          )}
+          <div className="flex items-center gap-1">
+            {hasActiveFilters && (
+              <span className="rounded bg-blue-100 px-1 py-0.5 text-[10px] text-blue-600">
+                已过滤
+              </span>
+            )}
+            {expandedSections.results ? (
+              <ChevronDown className="h-3 w-3 text-gray-400" />
+            ) : (
+              <ChevronRight className="h-3 w-3 text-gray-400" />
+            )}
+          </div>
         </button>
 
         {expandedSections.results && (
-          <div className="flex h-[calc(100%-32px)] border-t border-gray-100">
-            {/* Results List */}
-            <div className={cn(
-              'flex flex-col border-r border-gray-100 transition-all',
-              selectedFile ? 'w-1/2' : 'flex-1'
-            )}>
+          <div className="flex h-[calc(100%-32px)] flex-col border-t border-gray-100">
+            {/* Filter Bar */}
+            <div className="flex items-center gap-1 border-b border-gray-100 px-2 py-1">
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className={cn(
+                  'flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px]',
+                  showFilter || hasActiveFilters
+                    ? 'bg-blue-100 text-blue-600'
+                    : 'text-gray-500 hover:bg-gray-100'
+                )}
+              >
+                <Filter className="h-2.5 w-2.5" />
+                过滤
+              </button>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-gray-500 hover:bg-gray-100"
+                >
+                  <X className="h-2.5 w-2.5" />
+                  清除
+                </button>
+              )}
+              {showFilter && (
+                <>
+                  <input
+                    type="text"
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    placeholder="搜索文件名..."
+                    className="ml-1 w-32 rounded border border-gray-200 px-1.5 py-0.5 text-[10px] focus:border-blue-500 focus:outline-none"
+                  />
+                  <select
+                    value={filterSigned}
+                    onChange={(e) => setFilterSigned(e.target.value as 'all' | 'signed' | 'unsigned')}
+                    className="rounded border border-gray-200 px-1.5 py-0.5 text-[10px] focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="all">全部签名</option>
+                    <option value="signed">已签名</option>
+                    <option value="unsigned">未签名</option>
+                  </select>
+                  <select
+                    value={filterArch}
+                    onChange={(e) => setFilterArch(e.target.value as 'all' | 'x64' | 'x86')}
+                    className="rounded border border-gray-200 px-1.5 py-0.5 text-[10px] focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="all">全部架构</option>
+                    <option value="x64">x64</option>
+                    <option value="x86">x86</option>
+                  </select>
+                </>
+              )}
+            </div>
+
+            {/* Results Content */}
+            <div className="flex flex-1 overflow-hidden">
+              {/* Results List */}
+              <div className={cn(
+                'flex flex-col border-r border-gray-100 transition-all',
+                selectedFile ? 'w-1/2' : 'flex-1'
+              )}>
               {results.length === 0 ? (
                 <div className="flex flex-1 items-center justify-center text-xs text-gray-400">
                   {isScanning ? (
@@ -316,7 +411,7 @@ function ScanPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {results.map((file, idx) => (
+                      {filteredResults.map((file, idx) => (
                         <tr
                           key={idx}
                           onClick={() => setSelectedFile(file)}
@@ -441,6 +536,7 @@ function ScanPage() {
                 </div>
               </div>
             )}
+            </div>
           </div>
         )}
       </div>

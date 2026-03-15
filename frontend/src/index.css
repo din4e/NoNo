@@ -56,15 +56,15 @@ table {
   border-collapse: collapse;
 }
 
-/* Draggable title bar for frameless window */
+/* Draggable title bar for frameless window - Wails v2 method */
 .draggable-title {
-  -webkit-app-region: drag;
+  --wails-draggable: drag;
 }
 
 .draggable-title button,
 .draggable-title input,
 .draggable-title select {
-  -webkit-app-region: no-drag;
+  --wails-draggable: no-drag;
 }
 
 /* No select for UI elements */

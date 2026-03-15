@@ -10,10 +10,12 @@ NoNo 是一个 PE 文件扫描器和代码注入工具，用于安全研究。
 ## 功能特性
 
 - **PE 文件扫描**: 查找可被 patch 的小型签名可执行文件
+- **结果过滤**: 支持按文件名、签名状态、架构过滤扫描结果
 - **代码注入**: 4 种注入方法 (Function, EntryPoint, TLS, EAT)
 - **内置模板**: 提供测试用的 shellcode 模板
 - **数字签名**: 签名验证和处理
 - **GUI & CLI**: 同时提供图形界面和命令行界面
+- **现代 UI**: 无框窗口、自定义标题栏、紧凑布局
 
 ## 项目结构
 
@@ -72,8 +74,20 @@ wails dev
 ```
 
 GUI 提供两个主要功能：
-- **扫描**: 目录扫描、过滤条件配置、实时结果展示
-- **注入**: 选择目标 PE、选择 shellcode（模板或自定义）、配置注入方法
+
+### 扫描模块
+- 目录选择和扫描配置
+- 实时扫描进度显示
+- **结果过滤**: 按文件名搜索、签名状态、架构过滤
+- 文件详情面板（路径、大小、架构、签名信息、导入表）
+- DLL 导入列表查看
+
+### 注入模块
+- 目标 PE 文件选择和信息预览
+- Shellcode 选择（内置模板或自定义文件）
+- 4 种注入方法可选
+- 签名处理选项（保留/清除）
+- 自动备份原文件
 
 ### CLI 模式
 
@@ -163,9 +177,11 @@ Shoggoth.exe -i shellcode.bin -o obfuscated.bin
 
 - **PE 解析**: 使用 `github.com/Binject/debug/pe` 进行扩展 PE 功能
 - **签名验证**: 通过 syscall 调用 Windows CryptoAPI
-- **并发**: 使用 worker pool 模式进行并行扫描
-- **前端**: React 18 + TypeScript + TailwindCSS
-- **后端**: Go 1.24 + Wails v2
+- **并发扫描**: 使用 worker pool 模式进行并行扫描
+- **事件驱动**: Go 后端通过事件机制与前端通信
+- **前端**: React 18 + TypeScript + TailwindCSS + Lucide Icons
+- **后端**: Go 1.24 + Wails v2.11
+- **窗口**: 无框窗口设计，支持 CSS 拖拽
 
 ## 检测注意事项
 
@@ -176,6 +192,7 @@ Shoggoth.exe -i shellcode.bin -o obfuscated.bin
 
 ## 参考资料
 
++ **师承鬼屋女鬼**
 + [BinHol](https://github.com/timwhitez/BinHol) - 原始注入工具
 + [sgn](https://github.com/EgeBalci/sgn) - Shellcode 编码器
 + [Shoggoth](https://github.com/frkngksl/Shoggoth) - 高级 shellcode 混淆器

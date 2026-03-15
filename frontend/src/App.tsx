@@ -3,46 +3,18 @@ import { FolderSearch, Code2, Shield, Minus, Square, X } from 'lucide-react'
 import ScanPage from './pages/ScanPage'
 import InjectPage from './pages/InjectPage'
 import { cn } from './lib/utils'
+import { WindowMinimise, WindowToggleMaximise, Quit } from '../wailsjs/runtime/runtime'
+import './lib/wails' // Import for window.runtime type extensions
 
 type Tab = 'scan' | 'inject'
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('scan')
 
-  // Window controls for frameless window
-  const minimizeWindow = () => {
-    if (window.runtime?.WindowMinimise) {
-      window.runtime.WindowMinimise()
-    }
-  }
-
-  const maximizeWindow = () => {
-    if (window.runtime?.WindowToggleMaximise) {
-      window.runtime.WindowToggleMaximise()
-    }
-  }
-
-  const closeWindow = () => {
-    if (window.runtime?.WindowClose) {
-      window.runtime.WindowClose()
-    }
-  }
-
-  // Start window drag - Wails v2 way
-  const startDrag = (e: React.MouseEvent) => {
-    // Only start drag on left mouse button
-    if (e.button === 0 && window.runtime?.WindowStartDrag) {
-      window.runtime.WindowStartDrag()
-    }
-  }
-
   return (
     <div className="flex h-screen flex-col bg-gray-50 text-gray-900">
-      {/* Custom Title Bar - Draggable via WindowStartDrag */}
-      <div
-        className="flex h-7 items-center justify-between border-b border-gray-200 bg-white px-2 select-none"
-        onMouseDown={startDrag}
-      >
+      {/* Custom Title Bar - uses CSS --wails-draggable for drag */}
+      <div className="draggable-title flex h-7 items-center justify-between border-b border-gray-200 bg-white px-2 select-none">
         <div className="flex items-center gap-1.5">
           <Shield className="h-3.5 w-3.5 text-blue-600" />
           <span className="text-[11px] font-semibold">NoNo</span>
@@ -54,24 +26,24 @@ function App() {
           </span>
         </div>
 
-        {/* Window Controls - stop propagation to prevent drag */}
-        <div className="flex items-center" onMouseDown={(e) => e.stopPropagation()}>
+        {/* Window Controls */}
+        <div className="flex items-center">
           <button
-            onClick={minimizeWindow}
+            onClick={() => WindowMinimise()}
             className="flex h-5 w-7 items-center justify-center hover:bg-gray-100"
             title="最小化"
           >
             <Minus className="h-2.5 w-2.5" />
           </button>
           <button
-            onClick={maximizeWindow}
+            onClick={() => WindowToggleMaximise()}
             className="flex h-5 w-7 items-center justify-center hover:bg-gray-100"
             title="最大化"
           >
             <Square className="h-2.5 w-2.5" />
           </button>
           <button
-            onClick={closeWindow}
+            onClick={() => Quit()}
             className="flex h-5 w-7 items-center justify-center hover:bg-red-500 hover:text-white"
             title="关闭"
           >

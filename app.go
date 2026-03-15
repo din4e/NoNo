@@ -150,6 +150,10 @@ func (a *App) GetPEInfo(path string) (*config.PEInfo, error) {
 	}
 	info.Architecture = arch
 
+	// Check if DLL by extension
+	ext := strings.ToLower(filepath.Ext(path))
+	info.IsDLL = ext == ".dll"
+
 	isSigned, signerInfo := scanner.CheckDigitalSignature(path)
 	info.IsSigned = isSigned
 	info.SignerInfo = signerInfo
@@ -210,48 +214,63 @@ type TemplateInfo struct {
 }
 
 // GetTemplates returns a list of available shellcode templates
-func (a *App) GetTemplates() ([]TemplateInfo, error) {
-	appDir, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get working directory: %w", err)
-	}
-
+func (a *App) GetTemplates() []TemplateInfo {
 	var templates []TemplateInfo
 
-	entries, err := os.ReadDir(appDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read directory: %w", err)
+	// Try multiple locations to find templates
+	searchDirs := []string{}
+
+	// 1. Current working directory
+	if wd, err := os.Getwd(); err == nil {
+		searchDirs = append(searchDirs, wd)
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() {
+	// 2. Executable directory
+	if exePath, err := os.Executable(); err == nil {
+		searchDirs = append(searchDirs, filepath.Dir(exePath))
+	}
+
+	// Search for templates in all directories
+	foundTemplates := make(map[string]bool)
+	for _, dir := range searchDirs {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
 			continue
 		}
 
-		name := entry.Name()
-		if strings.HasPrefix(name, "template_") {
-			info, err := entry.Info()
-			if err != nil {
+		for _, entry := range entries {
+			if entry.IsDir() {
 				continue
 			}
 
-			desc := "Custom shellcode template"
-			if name == "template_0" {
-				desc = "MessageBox test shellcode"
-			} else if name == "template_1" {
-				desc = "File reader shellcode (reads AAAA.bin)"
-			}
+			name := entry.Name()
+			if strings.HasPrefix(name, "template_") && !foundTemplates[name] {
+				foundTemplates[name] = true
 
-			templates = append(templates, TemplateInfo{
-				Name:        name,
-				Path:        filepath.Join(appDir, name),
-				Size:        info.Size(),
-				Description: desc,
-			})
+				info, err := entry.Info()
+				if err != nil {
+					continue
+				}
+
+				desc := "Custom shellcode template"
+				if name == "template_0" {
+					desc = "MessageBox test shellcode"
+				} else if name == "template_1" {
+					desc = "File reader shellcode (reads AAAA.bin)"
+				}
+
+				templates = append(templates, TemplateInfo{
+					Name:        name,
+					Path:        filepath.Join(dir, name),
+					Size:        info.Size(),
+					Description: desc,
+				})
+			}
 		}
 	}
 
-	return templates, nil
+	// Return empty slice if no templates found (don't return error)
+	return templates
 }
 
 // GetAppDir returns the application directory

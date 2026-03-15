@@ -51,9 +51,10 @@ function InjectPage() {
   const loadTemplates = async () => {
     try {
       const tpls = await GetTemplates()
-      setTemplates(tpls)
+      setTemplates(tpls || [])
     } catch (e) {
       console.error('Failed to load templates:', e)
+      // Don't block - just set empty templates
     }
   }
 
