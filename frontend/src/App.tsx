@@ -10,6 +10,16 @@ type Tab = 'scan' | 'inject'
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('scan')
+  const [pendingPePath, setPendingPePath] = useState('')
+
+  const handleInjectWithFile = (path: string) => {
+    setPendingPePath(path)
+    setActiveTab('inject')
+  }
+
+  const handlePePathConsumed = () => {
+    setPendingPePath('')
+  }
 
   return (
     <div className="flex h-screen flex-col bg-gray-50 text-gray-900">
@@ -17,11 +27,11 @@ function App() {
       <div className="draggable-title flex h-7 items-center justify-between border-b border-gray-200 bg-white px-2 select-none">
         <div className="flex items-center gap-1.5">
           <Shield className="h-3.5 w-3.5 text-blue-600" />
-          <span className="text-[11px] font-semibold">NoNo</span>
+          <span className="text-[13px] font-semibold">NoNo</span>
         </div>
 
         <div className="flex items-center gap-1">
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-600">
+          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[12px] text-amber-600">
             Security Research
           </span>
         </div>
@@ -58,7 +68,7 @@ function App() {
           <button
             onClick={() => setActiveTab('scan')}
             className={cn(
-              'flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium transition-colors',
+              'flex items-center gap-1 px-2.5 py-1.5 text-[13px] font-medium transition-colors',
               activeTab === 'scan'
                 ? 'border-b-2 border-blue-600 text-blue-600'
                 : 'text-gray-500 hover:text-gray-700'
@@ -70,7 +80,7 @@ function App() {
           <button
             onClick={() => setActiveTab('inject')}
             className={cn(
-              'flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-medium transition-colors',
+              'flex items-center gap-1 px-2.5 py-1.5 text-[13px] font-medium transition-colors',
               activeTab === 'inject'
                 ? 'border-b-2 border-blue-600 text-blue-600'
                 : 'text-gray-500 hover:text-gray-700'
@@ -84,8 +94,8 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto p-2">
-        {activeTab === 'scan' && <ScanPage />}
-        {activeTab === 'inject' && <InjectPage />}
+        {activeTab === 'scan' && <ScanPage onInjectWithFile={handleInjectWithFile} />}
+        {activeTab === 'inject' && <InjectPage pendingPePath={pendingPePath} onPePathConsumed={handlePePathConsumed} />}
       </main>
     </div>
   )

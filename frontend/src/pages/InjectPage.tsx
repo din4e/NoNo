@@ -24,7 +24,12 @@ import {
 import type { InjectConfig, PEInfo, InjectResult, TemplateInfo } from '../lib/wails'
 import { cn, formatSize } from '../lib/utils'
 
-function InjectPage() {
+interface InjectPageProps {
+  pendingPePath: string
+  onPePathConsumed: () => void
+}
+
+function InjectPage({ pendingPePath, onPePathConsumed }: InjectPageProps) {
   const [pePath, setPePath] = useState('')
   const [shellcodePath, setShellcodePath] = useState('')
   const [method, setMethod] = useState('function')
@@ -47,6 +52,18 @@ function InjectPage() {
   useEffect(() => {
     loadTemplates()
   }, [])
+
+  // Handle pending PE path from scan page
+  useEffect(() => {
+    if (!pendingPePath) return
+    setPePath(pendingPePath)
+    onPePathConsumed()
+    setIsLoading(true)
+    GetPEInfo(pendingPePath)
+      .then((info) => setPeInfo(info))
+      .catch((e) => console.error('Failed to get PE info:', e))
+      .finally(() => setIsLoading(false))
+  }, [pendingPePath, onPePathConsumed])
 
   const loadTemplates = async () => {
     try {
@@ -141,11 +158,11 @@ function InjectPage() {
           onClick={() => toggleSection('peFile')}
           className="flex w-full items-center justify-between px-2 py-1.5 hover:bg-gray-50"
         >
-          <span className="text-xs font-medium">目标 PE 文件</span>
+          <span className="text-[14px] font-medium">目标 PE 文件</span>
           {expandedSections.peFile ? (
-            <ChevronDown className="h-3 w-3 text-gray-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
           ) : (
-            <ChevronRight className="h-3 w-3 text-gray-400" />
+            <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
           )}
         </button>
 
@@ -165,9 +182,9 @@ function InjectPage() {
                 className="flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-50"
               >
                 {isLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <FileCode className="h-3 w-3" />
+                  <FileCode className="h-3.5 w-3.5" />
                 )}
                 浏览
               </button>
@@ -175,29 +192,29 @@ function InjectPage() {
 
             {/* PE Info Grid */}
             {peInfo && (
-              <div className="mt-1.5 grid grid-cols-4 gap-1 text-[11px]">
+              <div className="mt-1.5 grid grid-cols-4 gap-1 text-xs">
                 <div className="rounded bg-gray-50 p-1.5">
-                  <div className="text-[10px] text-gray-400">大小</div>
+                  <div className="text-[12px] text-gray-400">大小</div>
                   <div className="flex items-center gap-0.5 font-medium">
-                    <HardDrive className="h-2.5 w-2.5 text-gray-400" />
+                    <HardDrive className="h-3 w-3 text-gray-400" />
                     {formatSize(peInfo.size)}
                   </div>
                 </div>
                 <div className="rounded bg-gray-50 p-1.5">
-                  <div className="text-[10px] text-gray-400">架构</div>
+                  <div className="text-[12px] text-gray-400">架构</div>
                   <div className="flex items-center gap-0.5 font-medium">
-                    <Cpu className="h-2.5 w-2.5 text-gray-400" />
+                    <Cpu className="h-3 w-3 text-gray-400" />
                     {peInfo.architecture}
                   </div>
                 </div>
                 <div className="rounded bg-gray-50 p-1.5">
-                  <div className="text-[10px] text-gray-400">类型</div>
+                  <div className="text-[12px] text-gray-400">类型</div>
                   <div className="font-medium">{peInfo.isDll ? 'DLL' : 'EXE'}</div>
                 </div>
                 <div className="rounded bg-gray-50 p-1.5">
-                  <div className="text-[10px] text-gray-400">签名</div>
+                  <div className="text-[12px] text-gray-400">签名</div>
                   <div className={cn('flex items-center gap-0.5 font-medium', peInfo.isSigned ? 'text-green-600' : 'text-red-500')}>
-                    {peInfo.isSigned ? <FileCheck className="h-2.5 w-2.5" /> : <FileX className="h-2.5 w-2.5" />}
+                    {peInfo.isSigned ? <FileCheck className="h-3 w-3" /> : <FileX className="h-3 w-3" />}
                     {peInfo.isSigned ? '有' : '无'}
                   </div>
                 </div>
@@ -213,11 +230,11 @@ function InjectPage() {
           onClick={() => toggleSection('shellcode')}
           className="flex w-full items-center justify-between px-2 py-1.5 hover:bg-gray-50"
         >
-          <span className="text-xs font-medium">Shellcode</span>
+          <span className="text-[14px] font-medium">Shellcode</span>
           {expandedSections.shellcode ? (
-            <ChevronDown className="h-3 w-3 text-gray-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
           ) : (
-            <ChevronRight className="h-3 w-3 text-gray-400" />
+            <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
           )}
         </button>
 
@@ -225,7 +242,7 @@ function InjectPage() {
           <div className="border-t border-gray-100 px-2 pb-2 pt-1.5">
             {/* Template Selection */}
             <div className="mb-1.5">
-              <label className="mb-0.5 block text-[10px] text-gray-500">内置模板</label>
+              <label className="mb-0.5 block text-[12px] text-gray-500">内置模板</label>
               <select
                 value={selectedTemplate}
                 onChange={(e) => handleTemplateSelect(e.target.value)}
@@ -258,7 +275,7 @@ function InjectPage() {
                 disabled={!!selectedTemplate}
                 className="flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50 disabled:opacity-50"
               >
-                <FileUp className="h-3 w-3" />
+                <FileUp className="h-3.5 w-3.5" />
                 浏览
               </button>
             </div>
@@ -272,11 +289,11 @@ function InjectPage() {
           onClick={() => toggleSection('options')}
           className="flex w-full items-center justify-between px-2 py-1.5 hover:bg-gray-50"
         >
-          <span className="text-xs font-medium">注入选项</span>
+          <span className="text-[14px] font-medium">注入选项</span>
           {expandedSections.options ? (
-            <ChevronDown className="h-3 w-3 text-gray-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
           ) : (
-            <ChevronRight className="h-3 w-3 text-gray-400" />
+            <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
           )}
         </button>
 
@@ -285,7 +302,7 @@ function InjectPage() {
             <div className="grid grid-cols-2 gap-1">
               {/* Method */}
               <div className="col-span-2">
-                <label className="mb-0.5 block text-[10px] text-gray-500">注入方法</label>
+                <label className="mb-0.5 block text-[12px] text-gray-500">注入方法</label>
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
@@ -296,7 +313,7 @@ function InjectPage() {
                   <option value="tlsinject">TLS Injection (TLS回调)</option>
                   <option value="eat">EAT Patching (导出表, 仅DLL)</option>
                 </select>
-                <div className="mt-0.5 text-[10px] text-gray-400">
+                <div className="mt-0.5 text-[12px] text-gray-400">
                   {method === 'function' && '在 .text 节中找到代码洞并放入 shellcode'}
                   {method === 'entrypoint' && '修改入口点直接执行 shellcode'}
                   {method === 'tlsinject' && '使用 TLS 回调在主入口点之前执行代码'}
@@ -307,7 +324,7 @@ function InjectPage() {
               {/* EAT Function Name */}
               {method === 'eat' && (
                 <div className="col-span-2">
-                  <label className="mb-0.5 block text-[10px] text-gray-500">
+                  <label className="mb-0.5 block text-[12px] text-gray-500">
                     函数名 (留空使用第一个导出)
                   </label>
                   <input
@@ -330,7 +347,7 @@ function InjectPage() {
                   onChange={(e) => setBackup(e.target.checked)}
                   className="h-3 w-3 rounded border-gray-300"
                 />
-                <span className="text-[11px]">创建备份 (.bak)</span>
+                <span className="text-xs">创建备份 (.bak)</span>
               </label>
               <label className="flex items-center gap-1.5">
                 <input
@@ -339,14 +356,14 @@ function InjectPage() {
                   onChange={(e) => setPreserveSig(e.target.checked)}
                   className="h-3 w-3 rounded border-gray-300"
                 />
-                <span className="text-[11px]">保留数字签名 (将失效)</span>
+                <span className="text-xs">保留数字签名 (将失效)</span>
               </label>
             </div>
 
             {/* Warning */}
             <div className="mt-1.5 flex items-start gap-1 rounded border border-amber-200 bg-amber-50 p-1.5">
-              <AlertTriangle className="h-3 w-3 flex-shrink-0 text-amber-500" />
-              <div className="text-[10px]">
+              <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
+              <div className="text-[12px]">
                 <span className="font-medium text-amber-700">仅限安全研究</span>
                 <span className="text-amber-600"> - 未经授权使用属违法行为</span>
               </div>
@@ -356,16 +373,16 @@ function InjectPage() {
             <button
               onClick={handleInject}
               disabled={isInjecting || !pePath || !shellcodePath}
-              className="mt-1.5 flex w-full items-center justify-center gap-1 rounded bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+              className="mt-1.5 flex w-full items-center justify-center gap-1 rounded bg-blue-500 px-3 py-1.5 text-[13px] font-medium text-white hover:bg-blue-600 disabled:opacity-50"
             >
               {isInjecting ? (
                 <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   注入中...
                 </>
               ) : (
                 <>
-                  <Play className="h-3 w-3" />
+                  <Play className="h-3.5 w-3.5" />
                   注入 Shellcode
                 </>
               )}
@@ -373,8 +390,8 @@ function InjectPage() {
 
             {/* Error */}
             {error && (
-              <div className="mt-1.5 flex items-start gap-1 rounded border border-red-200 bg-red-50 p-1.5 text-[11px] text-red-600">
-                <XCircle className="h-3 w-3 flex-shrink-0 mt-0.5" />
+              <div className="mt-1.5 flex items-start gap-1 rounded border border-red-200 bg-red-50 p-1.5 text-xs text-red-600">
+                <XCircle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
                 <p>{error}</p>
               </div>
             )}
@@ -383,16 +400,16 @@ function InjectPage() {
             {result && (
               <div
                 className={cn(
-                  'mt-1.5 flex items-start gap-1 rounded border p-1.5 text-[11px]',
+                  'mt-1.5 flex items-start gap-1 rounded border p-1.5 text-xs',
                   result.success
                     ? 'border-green-200 bg-green-50 text-green-700'
                     : 'border-red-200 bg-red-50 text-red-600'
                 )}
               >
                 {result.success ? (
-                  <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 flex-shrink-0" />
                 ) : (
-                  <XCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                  <XCircle className="h-4 w-4 flex-shrink-0" />
                 )}
                 <div>
                   <p className="font-medium">{result.message}</p>

@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Filter,
   X,
+  Code2,
 } from 'lucide-react'
 import {
   SelectDirectory,
@@ -25,7 +26,11 @@ import {
 import type { FileInfo, ScanProgress, ScanConfig } from '../lib/wails'
 import { cn, formatSize, truncatePath } from '../lib/utils'
 
-function ScanPage() {
+interface ScanPageProps {
+  onInjectWithFile: (path: string) => void
+}
+
+function ScanPage({ onInjectWithFile }: ScanPageProps) {
   const [directory, setDirectory] = useState('')
   const [minSize, setMinSize] = useState(0)
   const [maxSize, setMaxSize] = useState(61440)
@@ -154,11 +159,11 @@ function ScanPage() {
           onClick={() => toggleSection('config')}
           className="flex w-full items-center justify-between px-2 py-1.5 hover:bg-gray-50"
         >
-          <span className="text-xs font-medium">扫描配置</span>
+          <span className="text-[14px] font-medium">扫描配置</span>
           {expandedSections.config ? (
-            <ChevronDown className="h-3 w-3 text-gray-400" />
+            <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
           ) : (
-            <ChevronRight className="h-3 w-3 text-gray-400" />
+            <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
           )}
         </button>
 
@@ -179,14 +184,14 @@ function ScanPage() {
                     onClick={handleSelectDirectory}
                     className="flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
                   >
-                    <FolderOpen className="h-3 w-3" />
+                    <FolderOpen className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
 
               {/* Size Range */}
               <div className="col-span-2">
-                <label className="mb-0.5 block text-[10px] text-gray-500">最小大小</label>
+                <label className="mb-0.5 block text-[12px] text-gray-500">最小大小</label>
                 <input
                   type="number"
                   value={minSize}
@@ -195,7 +200,7 @@ function ScanPage() {
                 />
               </div>
               <div className="col-span-2">
-                <label className="mb-0.5 block text-[10px] text-gray-500">最大大小</label>
+                <label className="mb-0.5 block text-[12px] text-gray-500">最大大小</label>
                 <input
                   type="number"
                   value={maxSize}
@@ -204,7 +209,7 @@ function ScanPage() {
                 />
               </div>
               <div className="col-span-2">
-                <label className="mb-0.5 block text-[10px] text-gray-500">线程数</label>
+                <label className="mb-0.5 block text-[12px] text-gray-500">线程数</label>
                 <input
                   type="number"
                   value={workers}
@@ -217,7 +222,7 @@ function ScanPage() {
 
               {/* Architecture & Sign Filter & Extensions */}
               <div className="col-span-2">
-                <label className="mb-0.5 block text-[10px] text-gray-500">架构</label>
+                <label className="mb-0.5 block text-[12px] text-gray-500">架构</label>
                 <select
                   value={architecture}
                   onChange={(e) => setArchitecture(e.target.value)}
@@ -229,7 +234,7 @@ function ScanPage() {
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="mb-0.5 block text-[10px] text-gray-500">签名</label>
+                <label className="mb-0.5 block text-[12px] text-gray-500">签名</label>
                 <select
                   value={signFilter}
                   onChange={(e) => setSignFilter(e.target.value)}
@@ -241,7 +246,7 @@ function ScanPage() {
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="mb-0.5 block text-[10px] text-gray-500">扩展名</label>
+                <label className="mb-0.5 block text-[12px] text-gray-500">扩展名</label>
                 <input
                   type="text"
                   value={extensions}
@@ -257,7 +262,7 @@ function ScanPage() {
                   {isScanning && (
                     <div className="flex items-center gap-2">
                       <div className="flex-1">
-                        <div className="flex items-center justify-between text-[10px] text-gray-500">
+                        <div className="flex items-center justify-between text-[12px] text-gray-500">
                           <span>{progress.scannedFiles} / {progress.totalFiles}</span>
                           <span className="text-green-600">+{progress.foundFiles}</span>
                         </div>
@@ -280,7 +285,7 @@ function ScanPage() {
                     onClick={handleStopScan}
                     className="flex items-center gap-1 rounded bg-red-500 px-3 py-1.5 text-xs text-white hover:bg-red-600"
                   >
-                    <Square className="h-3 w-3" />
+                    <Square className="h-3.5 w-3.5" />
                     停止
                   </button>
                 ) : (
@@ -288,7 +293,7 @@ function ScanPage() {
                     onClick={handleStartScan}
                     className="flex items-center gap-1 rounded bg-blue-500 px-3 py-1.5 text-xs text-white hover:bg-blue-600"
                   >
-                    <Play className="h-3 w-3" />
+                    <Play className="h-3.5 w-3.5" />
                     扫描
                   </button>
                 )}
@@ -304,19 +309,19 @@ function ScanPage() {
           onClick={() => toggleSection('results')}
           className="flex w-full items-center justify-between px-2 py-1.5 hover:bg-gray-50"
         >
-          <span className="text-xs font-medium">
+          <span className="text-[14px] font-medium">
             扫描结果 ({hasActiveFilters ? `${filteredResults.length}/${results.length}` : results.length})
           </span>
           <div className="flex items-center gap-1">
             {hasActiveFilters && (
-              <span className="rounded bg-blue-100 px-1 py-0.5 text-[10px] text-blue-600">
+              <span className="rounded bg-blue-100 px-1 py-0.5 text-[12px] text-blue-600">
                 已过滤
               </span>
             )}
             {expandedSections.results ? (
-              <ChevronDown className="h-3 w-3 text-gray-400" />
+              <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
             ) : (
-              <ChevronRight className="h-3 w-3 text-gray-400" />
+              <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
             )}
           </div>
         </button>
@@ -328,21 +333,21 @@ function ScanPage() {
               <button
                 onClick={() => setShowFilter(!showFilter)}
                 className={cn(
-                  'flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px]',
+                  'flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px]',
                   showFilter || hasActiveFilters
                     ? 'bg-blue-100 text-blue-600'
                     : 'text-gray-500 hover:bg-gray-100'
                 )}
               >
-                <Filter className="h-2.5 w-2.5" />
+                <Filter className="h-3 w-3" />
                 过滤
               </button>
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-gray-500 hover:bg-gray-100"
+                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] text-gray-500 hover:bg-gray-100"
                 >
-                  <X className="h-2.5 w-2.5" />
+                  <X className="h-3 w-3" />
                   清除
                 </button>
               )}
@@ -353,12 +358,12 @@ function ScanPage() {
                     value={filterText}
                     onChange={(e) => setFilterText(e.target.value)}
                     placeholder="搜索文件名..."
-                    className="ml-1 w-32 rounded border border-gray-200 px-1.5 py-0.5 text-[10px] focus:border-blue-500 focus:outline-none"
+                    className="ml-1 w-32 rounded border border-gray-200 px-1.5 py-0.5 text-[11px] focus:border-blue-500 focus:outline-none"
                   />
                   <select
                     value={filterSigned}
                     onChange={(e) => setFilterSigned(e.target.value as 'all' | 'signed' | 'unsigned')}
-                    className="rounded border border-gray-200 px-1.5 py-0.5 text-[10px] focus:border-blue-500 focus:outline-none"
+                    className="rounded border border-gray-200 px-1.5 py-0.5 text-[11px] focus:border-blue-500 focus:outline-none"
                   >
                     <option value="all">全部签名</option>
                     <option value="signed">已签名</option>
@@ -367,7 +372,7 @@ function ScanPage() {
                   <select
                     value={filterArch}
                     onChange={(e) => setFilterArch(e.target.value as 'all' | 'x64' | 'x86')}
-                    className="rounded border border-gray-200 px-1.5 py-0.5 text-[10px] focus:border-blue-500 focus:outline-none"
+                    className="rounded border border-gray-200 px-1.5 py-0.5 text-[11px] focus:border-blue-500 focus:outline-none"
                   >
                     <option value="all">全部架构</option>
                     <option value="x64">x64</option>
@@ -388,7 +393,7 @@ function ScanPage() {
                 <div className="flex flex-1 items-center justify-center text-xs text-gray-400">
                   {isScanning ? (
                     <div className="flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       扫描中...
                     </div>
                   ) : (
@@ -400,7 +405,7 @@ function ScanPage() {
                 </div>
               ) : (
                 <div className="flex-1 overflow-auto">
-                  <table className="w-full text-[11px]">
+                  <table className="w-full text-xs">
                     <thead className="sticky top-0 z-10 bg-white">
                       <tr className="border-b border-gray-100 text-left text-gray-500">
                         <th className="pb-1 font-medium">文件</th>
@@ -425,25 +430,25 @@ function ScanPage() {
                           </td>
                           <td className="py-1">
                             <span className="flex items-center gap-0.5 text-gray-500">
-                              <HardDrive className="h-2.5 w-2.5" />
+                              <HardDrive className="h-3 w-3" />
                               {formatSize(file.size)}
                             </span>
                           </td>
                           <td className="py-1">
                             <span className="flex items-center gap-0.5 text-gray-500">
-                              <Cpu className="h-2.5 w-2.5" />
+                              <Cpu className="h-3 w-3" />
                               {file.architecture}
                             </span>
                           </td>
                           <td className="py-1">
                             {file.isSigned ? (
                               <span className="flex items-center gap-0.5 text-green-600">
-                                <FileCheck className="h-2.5 w-2.5" />
+                                <FileCheck className="h-3 w-3" />
                                 {file.signerInfo ? '✓' : '✓'}
                               </span>
                             ) : (
                               <span className="flex items-center gap-0.5 text-red-500">
-                                <FileX className="h-2.5 w-2.5" />
+                                <FileX className="h-3 w-3" />
                               </span>
                             )}
                           </td>
@@ -462,34 +467,34 @@ function ScanPage() {
             {selectedFile && (
               <div className="flex w-1/2 flex-col overflow-auto p-2">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-medium">文件详情</span>
+                  <span className="text-[14px] font-medium">文件详情</span>
                   <button
                     onClick={() => setSelectedFile(null)}
-                    className="text-[10px] text-gray-400 hover:text-gray-600"
+                    className="text-[12px] text-gray-400 hover:text-gray-600"
                   >
                     关闭
                   </button>
                 </div>
 
-                <div className="space-y-1.5 text-[11px]">
+                <div className="space-y-1.5 text-xs">
                   {/* Path */}
                   <div className="rounded bg-gray-50 p-1.5">
-                    <div className="mb-0.5 text-[10px] text-gray-400">完整路径</div>
+                    <div className="mb-0.5 text-[12px] text-gray-400">完整路径</div>
                     <div className="break-all">{selectedFile.path}</div>
                   </div>
 
                   {/* Basic Info Grid */}
                   <div className="grid grid-cols-3 gap-1">
                     <div className="rounded bg-gray-50 p-1.5">
-                      <div className="text-[10px] text-gray-400">大小</div>
+                      <div className="text-[12px] text-gray-400">大小</div>
                       <div className="font-medium">{formatSize(selectedFile.size)}</div>
                     </div>
                     <div className="rounded bg-gray-50 p-1.5">
-                      <div className="text-[10px] text-gray-400">架构</div>
+                      <div className="text-[12px] text-gray-400">架构</div>
                       <div className="font-medium">{selectedFile.architecture}</div>
                     </div>
                     <div className="rounded bg-gray-50 p-1.5">
-                      <div className="text-[10px] text-gray-400">签名</div>
+                      <div className="text-[12px] text-gray-400">签名</div>
                       <div className={cn('font-medium', selectedFile.isSigned ? 'text-green-600' : 'text-red-500')}>
                         {selectedFile.isSigned ? '已签名' : '未签名'}
                       </div>
@@ -499,7 +504,7 @@ function ScanPage() {
                   {/* Signer Info */}
                   {selectedFile.isSigned && selectedFile.signerInfo && (
                     <div className="rounded bg-green-50 p-1.5">
-                      <div className="text-[10px] text-green-600">签名者</div>
+                      <div className="text-[12px] text-green-600">签名者</div>
                       <div className="text-green-700">{selectedFile.signerInfo}</div>
                     </div>
                   )}
@@ -507,8 +512,8 @@ function ScanPage() {
                   {/* Import Stats */}
                   <div className="rounded bg-gray-50 p-1.5">
                     <div className="flex items-center justify-between">
-                      <div className="text-[10px] text-gray-400">导入表</div>
-                      <div className="text-[10px]">
+                      <div className="text-[12px] text-gray-400">导入表</div>
+                      <div className="text-[11px]">
                         {selectedFile.importCount} 函数 / {selectedFile.importedDLLs.length} DLL
                       </div>
                     </div>
@@ -517,14 +522,14 @@ function ScanPage() {
                   {/* DLL List */}
                   {selectedFile.importedDLLs.length > 0 && (
                     <div className="flex-1 overflow-auto rounded border border-gray-200 bg-white">
-                      <div className="sticky top-0 bg-gray-50 px-1.5 py-1 text-[10px] font-medium text-gray-500">
+                      <div className="sticky top-0 bg-gray-50 px-1.5 py-1 text-[12px] font-medium text-gray-500">
                         DLL 列表
                       </div>
                       <div className="max-h-32 overflow-auto">
                         {selectedFile.importedDLLs.map((dll, i) => (
                           <div
                             key={i}
-                            className="flex items-center justify-between border-b border-gray-50 px-1.5 py-0.5 text-[10px]"
+                            className="flex items-center justify-between border-b border-gray-50 px-1.5 py-0.5 text-[11px]"
                           >
                             <span className="font-mono text-blue-600">{dll.dllName}</span>
                             <span className="text-gray-400">{dll.functions.length} 函数</span>
@@ -533,6 +538,15 @@ function ScanPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Inject Button */}
+                  <button
+                    onClick={() => onInjectWithFile(selectedFile.path)}
+                    className="mt-1 flex w-full items-center justify-center gap-1 rounded bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600"
+                  >
+                    <Code2 className="h-3.5 w-3.5" />
+                    注入此文件
+                  </button>
                 </div>
               </div>
             )}
