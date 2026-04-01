@@ -7,6 +7,12 @@
 
 NoNo 是一个 PE 文件扫描器和代码注入工具，用于安全研究。
 
+![NoNo GUI](img/NoNo.png)
+
+![NoNo CLI Usage](img/nono-cli-1.jpg)
+
+![NoNo CLI Scan Results](img/nono-cli-2.jpg)
+
 ## 功能特性
 
 - **PE 文件扫描**: 查找可被 patch 的小型签名可执行文件
@@ -76,6 +82,7 @@ wails dev
 GUI 提供两个主要功能：
 
 ### 扫描模块
+
 - 目录选择和扫描配置
 - 实时扫描进度显示
 - **结果过滤**: 按文件名搜索、签名状态、架构过滤
@@ -83,6 +90,7 @@ GUI 提供两个主要功能：
 - DLL 导入列表查看
 
 ### 注入模块
+
 - 目标 PE 文件选择和信息预览
 - Shellcode 选择（内置模板或自定义文件）
 - 4 种注入方法可选
